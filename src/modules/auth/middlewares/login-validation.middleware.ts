@@ -20,9 +20,7 @@ export class LoginValidationMiddleware implements NestMiddleware {
 
     if (validations.length) {
       throw new BadRequestException(
-        validations.reduce((acc, curr) => {
-          return [...acc, ...Object.values(curr.constraints)];
-        }, []),
+        validations.flatMap((curr) => Object.values(curr.constraints)),
       );
     }
 
