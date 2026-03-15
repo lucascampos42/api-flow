@@ -12,14 +12,10 @@ async function bootstrap() {
 
   app.enableCors({
     origin: async (origin, callback) => {
-      if (!origin) return callback(null, true);
-
       try {
         const isAllowed = await corsService.isOriginAllowed(origin);
-        // Default allowed origins
-        const defaults = ['https://codesdevs.com.br', 'http://localhost:4200'];
 
-        if (isAllowed || defaults.includes(origin)) {
+        if (isAllowed) {
           callback(null, true);
         } else {
           callback(new Error('Not allowed by CORS'));
