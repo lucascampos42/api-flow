@@ -20,6 +20,7 @@ export class UserService {
       where: {
         OR: [{ email }, { username }],
       },
+      select: { id: true },
     });
 
     if (existingUser) {
