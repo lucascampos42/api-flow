@@ -67,7 +67,9 @@ describe('CorsService', () => {
       mockPrismaService.allowedOrigin.findMany.mockResolvedValue([]);
       await service.onModuleInit();
 
-      expect(await service.isOriginAllowed('https://malicious.com')).toBe(false);
+      expect(await service.isOriginAllowed('https://malicious.com')).toBe(
+        false,
+      );
     });
   });
 
@@ -75,7 +77,10 @@ describe('CorsService', () => {
     it('should add a new origin', async () => {
       const url = 'https://new-origin.com';
       mockPrismaService.allowedOrigin.findUnique.mockResolvedValue(null);
-      mockPrismaService.allowedOrigin.create.mockResolvedValue({ id: '1', url });
+      mockPrismaService.allowedOrigin.create.mockResolvedValue({
+        id: '1',
+        url,
+      });
 
       const result = await service.addOrigin(url);
 
