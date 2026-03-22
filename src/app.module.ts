@@ -12,7 +12,15 @@ import { join } from 'path';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: (config) => {
+        if (!config.JWT_SECRET) {
+          throw new Error('JWT_SECRET must be defined');
+        }
+        return config;
+      },
+    }),
     PrismaModule,
     UserModule,
     AuthModule,
