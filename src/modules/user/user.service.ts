@@ -78,9 +78,13 @@ export class UserService {
     const user = await this.findOneUser(id);
     if (!user) throw new NotFoundException('User not found');
 
-    const data: any = { ...updateUserDto };
-    if (data.password) {
-      data.password = await bcrypt.hash(data.password, 10);
+    const { email, username, password } = updateUserDto;
+    const data: any = {};
+
+    if (email) data.email = email;
+    if (username) data.username = username;
+    if (password) {
+      data.password = await bcrypt.hash(password, 10);
     }
 
     const updatedUser = await this.prisma.user.update({
