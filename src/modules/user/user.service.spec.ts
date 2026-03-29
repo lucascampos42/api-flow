@@ -40,8 +40,7 @@ describe('UserService', () => {
         username: 'testuser',
         password: 'hashedpassword',
       };
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...expectedResult } = mockUser;
+      const { password: _, ...expectedResult } = mockUser;
       mockPrismaService.user.delete.mockResolvedValue(mockUser);
 
       const result = await service.remove('1');
