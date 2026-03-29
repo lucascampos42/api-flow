@@ -12,19 +12,19 @@ export class BlogService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createPostDto: CreatePostDto, authorId: string) {
-    const existing = await this.prisma.post.findUnique({
-      where: { slug: createPostDto.slug },
-    });
-    if (existing) {
-      throw new ConflictException('Slug already exists');
+    try {
+      return await this.prisma.post.create({
+        data: {
+          ...createPostDto,
+          authorId,
+        },
+      });
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        throw new ConflictException('Slug already exists');
+      }
+      throw error;
     }
-
-    return this.prisma.post.create({
-      data: {
-        ...createPostDto,
-        authorId,
-      },
-    });
   }
 
   async findAll(publishedOnly = true) {
