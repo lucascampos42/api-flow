@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BlogService } from './blog.service';
 import { PrismaService } from '../../services/prisma/prisma.service';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ConflictException } from '@nestjs/common';
 
 describe('BlogService', () => {
   let service: BlogService;
@@ -10,6 +10,7 @@ describe('BlogService', () => {
   const mockPrismaService = {
     post: {
       findUnique: jest.fn(),
+      create: jest.fn(),
     },
   };
 
@@ -30,6 +31,49 @@ describe('BlogService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('create', () => {
+    const createPostDto = {
+      title: 'Test Post',
+      content: 'Test content',
+      slug: 'test-post',
+    };
+    const authorId = 'user-1';
+
+    it('should create a new post successfully', async () => {
+      const mockCreatedPost = { id: '1', ...createPostDto, authorId };
+      mockPrismaService.post.create.mockResolvedValue(mockCreatedPost);
+
+      const result = await service.create(createPostDto, authorId);
+
+      expect(result).toEqual(mockCreatedPost);
+      expect(prisma.post.create).toHaveBeenCalledWith({
+        data: {
+          ...createPostDto,
+          authorId,
+        },
+      });
+    });
+
+    it('should throw ConflictException if slug already exists (P2002)', async () => {
+      const error = new Error('Unique constraint failed');
+      (error as any).code = 'P2002';
+      mockPrismaService.post.create.mockRejectedValue(error);
+
+      await expect(service.create(createPostDto, authorId)).rejects.toThrow(
+        new ConflictException('Slug already exists'),
+      );
+    });
+
+    it('should rethrow other errors during creation', async () => {
+      const error = new Error('Database error');
+      mockPrismaService.post.create.mockRejectedValue(error);
+
+      await expect(service.create(createPostDto, authorId)).rejects.toThrow(
+        'Database error',
+      );
+    });
   });
 
   describe('findOne', () => {
