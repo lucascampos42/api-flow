@@ -75,9 +75,6 @@ export class UserService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const user = await this.findOneUser(id);
-    if (!user) throw new NotFoundException('User not found');
-
     const { email, username, password } = updateUserDto;
     const data: any = {};
 
@@ -87,16 +84,23 @@ export class UserService {
       data.password = await bcrypt.hash(password, 10);
     }
 
-    const updatedUser = await this.prisma.user.update({
-      where: { id },
-      data: {
-        ...data,
-        tokenVersion: { increment: 1 },
-      },
-    });
+    try {
+      const updatedUser = await this.prisma.user.update({
+        where: { id },
+        data: {
+          ...data,
+          tokenVersion: { increment: 1 },
+        },
+      });
 
-    const { password: _, ...result } = updatedUser;
-    return result;
+      const { password: _, ...result } = updatedUser;
+      return result;
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('User not found');
+      }
+      throw error;
+    }
   }
 
   async remove(id: string) {
