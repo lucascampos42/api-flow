@@ -57,7 +57,9 @@ describe('UserController', () => {
 
   describe('listResellers', () => {
     it('should list all resellers', async () => {
-      const expectedResult = [{ id: '1', username: 'reseller1', role: Role.RESELLER }];
+      const expectedResult = [
+        { id: '1', username: 'reseller1', role: Role.RESELLER },
+      ];
       mockUserService.findAll.mockResolvedValue(expectedResult);
 
       const result = await controller.listResellers();
