@@ -9,7 +9,7 @@ export class ResetPasswordDto {
   @IsString()
   @MinLength(4)
   @MaxLength(20)
-  @Matches(/.*/, {
+  @Matches(/^((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
     message: 'senha muito fraca',
   })
   @ApiProperty()
