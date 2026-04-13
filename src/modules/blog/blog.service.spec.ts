@@ -11,6 +11,7 @@ describe('BlogService', () => {
     post: {
       findUnique: jest.fn(),
       create: jest.fn(),
+      findMany: jest.fn(),
     },
   };
 
@@ -101,6 +102,84 @@ describe('BlogService', () => {
       await expect(service.findOne('non-existent')).rejects.toThrow(
         new NotFoundException('Post not found'),
       );
+    });
+  });
+
+  describe('findAll', () => {
+    it('should return only published posts by default', async () => {
+      const mockPosts = [
+        {
+          id: '1',
+          title: 'Post 1',
+          slug: 'post-1',
+          published: true,
+          createdAt: new Date(),
+          author: { username: 'user1' },
+        },
+      ];
+      mockPrismaService.post.findMany.mockResolvedValue(mockPosts);
+
+      const result = await service.findAll();
+
+      expect(result).toEqual(mockPosts);
+      expect(prisma.post.findMany).toHaveBeenCalledWith({
+        where: { published: true },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          published: true,
+          createdAt: true,
+          author: {
+            select: {
+              username: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+    });
+
+    it('should return all posts when publishedOnly is false', async () => {
+      const mockPosts = [
+        {
+          id: '1',
+          title: 'Post 1',
+          slug: 'post-1',
+          published: true,
+          createdAt: new Date(),
+          author: { username: 'user1' },
+        },
+        {
+          id: '2',
+          title: 'Post 2',
+          slug: 'post-2',
+          published: false,
+          createdAt: new Date(),
+          author: { username: 'user1' },
+        },
+      ];
+      mockPrismaService.post.findMany.mockResolvedValue(mockPosts);
+
+      const result = await service.findAll(false);
+
+      expect(result).toEqual(mockPosts);
+      expect(prisma.post.findMany).toHaveBeenCalledWith({
+        where: {},
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          published: true,
+          createdAt: true,
+          author: {
+            select: {
+              username: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
     });
   });
 });
