@@ -44,7 +44,7 @@ export class CorsService implements OnModuleInit {
   }
 
   async isOriginAllowed(origin: string | undefined): Promise<boolean> {
-    if (!origin) return true; // Allow non-browser requests (e.g. Postman)
+    if (!origin) return false; // Block non-browser requests or requests without origin header
     return this.allowedOrigins.has(origin);
   }
 }

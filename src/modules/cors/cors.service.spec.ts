@@ -38,9 +38,9 @@ describe('CorsService', () => {
   });
 
   describe('isOriginAllowed', () => {
-    it('should return true if origin is undefined', async () => {
+    it('should return false if origin is undefined', async () => {
       const result = await service.isOriginAllowed(undefined);
-      expect(result).toBe(true);
+      expect(result).toBe(false);
     });
 
     it('should return true for default allowed origins', async () => {
