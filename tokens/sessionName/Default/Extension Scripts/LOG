@@ -1,4 +1,0 @@
-2024/11/22-12:11:36.177 5628 Creating DB C:\dev\cds-api\tokens\sessionName\Default\Extension Scripts since it was missing.
-2024/11/22-12:11:36.179 5628 Reusing MANIFEST C:\dev\cds-api\tokens\sessionName\Default\Extension Scripts/MANIFEST-000001
-2024/11/22-12:11:36.180 5628 Recovering log #3
-2024/11/22-12:11:36.180 5628 Reusing old log C:\dev\cds-api\tokens\sessionName\Default\Extension Scripts/000003.log 
