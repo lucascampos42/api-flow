@@ -2,6 +2,8 @@ import { Injectable, Logger, ConflictException, InternalServerErrorException } f
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRevendaDto } from './dto/create-revenda.dto';
 import { ConfigService } from '@nestjs/config';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class RevendasService {
@@ -10,6 +12,7 @@ export class RevendasService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    @InjectQueue('provisioning-queue') private provisioningQueue: Queue,
   ) {}
 
   async create(createRevendaDto: CreateRevendaDto) {
@@ -25,11 +28,11 @@ export class RevendasService {
 
       if (provisionNow !== false) {
         try {
-          await this.callRevendaProvisioning(schemaName);
+          this.logger.log(`Adicionando job de provisionamento para ${schemaName} na fila.`);
+          await this.provisioningQueue.add('provision', { schemaName });
         } catch (error) {
-          // Se falhar o provisionamento, opcionalmente removemos o registro
-          await this.prisma.revenda.delete({ where: { id: revenda.id } });
-          throw new InternalServerErrorException(`Falha ao provisionar schema na api-revenda: ${(error as any).message}`);
+          this.logger.error(`Erro ao enfileirar provisionamento: ${error.message}`);
+          // Não deletamos a revenda aqui, pois o job pode ser retentado ou disparado manualmente depois
         }
       }
 
@@ -43,31 +46,6 @@ export class RevendasService {
       }
       throw new InternalServerErrorException('Erro ao criar revenda');
     }
-  }
-
-  private async callRevendaProvisioning(schemaName: string) {
-    const revendaApiUrl = this.configService.get<string>('REVENDA_API_URL');
-    const internalApiKey = this.configService.get<string>('INTERNAL_API_KEY');
-
-    if (!revendaApiUrl) {
-      throw new Error('REVENDA_API_URL não configurada no api-flow');
-    }
-
-    const response = await fetch(`${revendaApiUrl}/internal/provisioning`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': internalApiKey || '',
-      },
-      body: JSON.stringify({ schemaName }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
-      throw new Error(errorData.message || `HTTP ${response.status}`);
-    }
-
-    return true;
   }
 
   async findAll() {

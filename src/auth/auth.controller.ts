@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -32,14 +32,20 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Login realizado com sucesso.' })
   @ApiResponse({ status: 401, description: 'Credenciais inválidas.' })
   async login(
+    @Req() req: Request,
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { access_token, refresh_token, user, companies, currentCompany } =
-      await this.authService.login(loginDto);
+    const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
+    const userAgent = req.headers['user-agent'] || 'unknown';
 
+    const { access_token, refresh_token, user, companies, currentCompany } =
+      await this.authService.login(loginDto, ip, userAgent);
+
+    // Configuração do Cookie HttpOnly
     const isProduction = process.env.NODE_ENV === 'production';
 
+    // Cookie de Acesso
     res.cookie('access_token', access_token, {
       httpOnly: true,
       secure: isProduction,
@@ -49,6 +55,7 @@ export class AuthController {
       maxAge: 3 * 24 * 60 * 60 * 1000, // 3 dias
     });
 
+    // Cookie de Refresh
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
       secure: isProduction,
@@ -74,8 +81,9 @@ export class AuthController {
   async refresh(@Req() req, @Res({ passthrough: true }) res: Response) {
     const userId = req.user['sub'];
     const refreshToken = req.user['refreshToken'];
+    const sessionId = req.user['sessionId'];
 
-    const tokens = await this.authService.refreshTokens(userId, refreshToken);
+    const tokens = await this.authService.refreshTokens(userId, refreshToken, sessionId);
 
     const isProduction = process.env.NODE_ENV === 'production';
 
@@ -108,7 +116,9 @@ export class AuthController {
   @ApiOperation({ summary: 'Encerrar sessão' })
   async logout(@Req() req, @Res({ passthrough: true }) res: Response) {
     const userId = req.user['userId'];
-    await this.authService.logout(userId);
+    const sessionId = req.user['sessionId'];
+    
+    await this.authService.logout(userId, sessionId);
 
     const isProduction = process.env.NODE_ENV === 'production';
     const cookieOptions = {
@@ -125,6 +135,9 @@ export class AuthController {
     return { message: 'Logout realizado com sucesso' };
   }
 
+  /**
+   * ✨ Trocar empresa atual
+   */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post('switch-company')
@@ -135,9 +148,12 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const userId = req.user['userId'];
-    const { access_token, refresh_token, currentCompany } =
-      await this.authService.switchCompany(userId, companyId);
+    const sessionId = req.user['sessionId'];
 
+    const { access_token, refresh_token, currentCompany } =
+      await this.authService.switchCompany(userId, companyId, sessionId);
+
+    // Atualizar cookies com novos tokens
     const isProduction = process.env.NODE_ENV === 'production';
 
     res.cookie('access_token', access_token, {

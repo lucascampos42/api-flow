@@ -6,10 +6,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './constants';
 import { JwtStrategy } from './jwt.strategy';
 import { RefreshTokenStrategy } from './refresh-token.strategy';
+import { SessionsModule } from './sessions/sessions.module';
 
 @Module({
   imports: [
     UsersModule,
+    SessionsModule,
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,

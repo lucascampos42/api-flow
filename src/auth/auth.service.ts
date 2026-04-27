@@ -10,6 +10,7 @@ import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { SessionsService } from './sessions/sessions.service';
 
 @Injectable()
 export class AuthService {
@@ -18,9 +19,10 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private prisma: PrismaService,
+    private sessionsService: SessionsService,
   ) {}
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, ip: string, userAgent: string) {
     const user = await this.usersService.findByIdentifier(loginDto.identifier);
 
     if (!user || !user.passwordHash) {
@@ -75,11 +77,15 @@ export class AuthService {
         : null;
     }
 
+    // Criar sessão no Redis
+    const sessionId = await this.sessionsService.createSession(user.id, ip, userAgent);
+
     const tokens = await this.getTokens(
       user.id,
       user.email,
       user,
       currentCompanyId,
+      sessionId,
     );
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
@@ -99,7 +105,12 @@ export class AuthService {
     };
   }
 
-  async logout(userId: string) {
+  async logout(userId: string, sessionId?: string) {
+    if (sessionId) {
+      await this.sessionsService.revokeSession(userId, sessionId);
+    } else {
+      await this.sessionsService.revokeAllSessions(userId);
+    }
     return this.usersService.update(userId, { hashedRefreshToken: null });
   }
 
@@ -194,7 +205,7 @@ export class AuthService {
     };
   }
 
-  async switchCompany(userId: string, companyId: string) {
+  async switchCompany(userId: string, companyId: string, sessionId?: string) {
     const user = await this.usersService.findOne(userId);
     if (!user) {
       throw new UnauthorizedException('Usuário não encontrado');
@@ -236,7 +247,7 @@ export class AuthService {
 
     await this.usersService.update(userId, { currentCompanyId: companyId });
 
-    const tokens = await this.getTokens(user.id, user.email, user, companyId);
+    const tokens = await this.getTokens(user.id, user.email, user, companyId, sessionId);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
     return {
@@ -250,7 +261,7 @@ export class AuthService {
     };
   }
 
-  async refreshTokens(userId: string, refreshToken: string) {
+  async refreshTokens(userId: string, refreshToken: string, sessionId?: string) {
     const user = await this.usersService.findOne(userId);
     if (!user || !user.hashedRefreshToken)
       throw new ForbiddenException('Acesso negado');
@@ -262,7 +273,13 @@ export class AuthService {
 
     if (!refreshTokenMatches) throw new ForbiddenException('Acesso negado');
 
-    const tokens = await this.getTokens(user.id, user.email, user);
+    // Se tiver sessionId, validar no Redis
+    if (sessionId) {
+      const isValid = await this.sessionsService.isSessionValid(userId, sessionId);
+      if (!isValid) throw new ForbiddenException('Sessão expirada ou revogada');
+    }
+
+    const tokens = await this.getTokens(user.id, user.email, user, user.currentCompanyId, sessionId);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
     return tokens;
@@ -280,6 +297,7 @@ export class AuthService {
     email: string,
     user: any,
     companyId?: string | null,
+    sessionId?: string,
   ) {
     let schemaName: string | null = null;
     let companyRole: string | null = null;
@@ -308,6 +326,7 @@ export class AuthService {
       companyId: companyId || null,
       schemaName: schemaName,
       companyRole: companyRole,
+      sessionId: sessionId, // Incluir sessionId no token
     };
 
     const jwtExpiration =
