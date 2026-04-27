@@ -61,7 +61,7 @@ export class PrismaService
           },
         });
       } catch (error) {
-        this.logger.error(`Erro ao gravar log de auditoria: ${error.message}`);
+        this.logger.error(`Erro ao gravar log de auditoria: ${(error as any).message}`);
       }
     }
   }

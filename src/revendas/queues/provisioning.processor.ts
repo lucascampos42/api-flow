@@ -20,7 +20,7 @@ export class ProvisioningProcessor extends WorkerHost {
       this.logger.log(`Provisionamento concluído com sucesso para: ${schemaName}`);
       return { success: true };
     } catch (error) {
-      this.logger.error(`Falha ao processar job de provisionamento: ${error.message}`);
+      this.logger.error(`Falha ao processar job de provisionamento: ${(error as any).message}`);
       throw error; // Lançar erro permite que o BullMQ tente novamente conforme configurado
     }
   }

@@ -31,7 +31,7 @@ export class RevendasService {
           this.logger.log(`Adicionando job de provisionamento para ${schemaName} na fila.`);
           await this.provisioningQueue.add('provision', { schemaName });
         } catch (error) {
-          this.logger.error(`Erro ao enfileirar provisionamento: ${error.message}`);
+          this.logger.error(`Erro ao enfileirar provisionamento: ${(error as any).message}`);
           // Não deletamos a revenda aqui, pois o job pode ser retentado ou disparado manualmente depois
         }
       }
