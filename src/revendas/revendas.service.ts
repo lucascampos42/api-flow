@@ -29,7 +29,7 @@ export class RevendasService {
         } catch (error) {
           // Se falhar o provisionamento, opcionalmente removemos o registro
           await this.prisma.revenda.delete({ where: { id: revenda.id } });
-          throw new InternalServerErrorException(`Falha ao provisionar schema na api-revenda: ${error.message}`);
+          throw new InternalServerErrorException(`Falha ao provisionar schema na api-revenda: ${(error as any).message}`);
         }
       }
 
@@ -38,7 +38,7 @@ export class RevendasService {
       if (error instanceof ConflictException || error instanceof InternalServerErrorException) {
         throw error;
       }
-      if (error.code === 'P2002') {
+      if ((error as any).code === 'P2002') {
         throw new ConflictException('Revenda com este domínio ou documento já existe.');
       }
       throw new InternalServerErrorException('Erro ao criar revenda');

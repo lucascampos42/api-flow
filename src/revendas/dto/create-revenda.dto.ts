@@ -1,26 +1,26 @@
 import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateRevendaDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  domain: string;
+  domain!: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  document: string;
+  document!: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  documentType: string;
+  documentType!: string;
 
   @ApiPropertyOptional()
   @IsString()
@@ -63,4 +63,4 @@ export class CreateRevendaDto {
   provisionNow?: boolean = true;
 }
 
-import { ApiPropertyOptional } from '@nestjs/swagger';
+
