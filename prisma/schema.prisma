@@ -1,0 +1,408 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AccessRule {
+  id        String   @id @default(uuid())
+  role      String
+  resource  String
+  canRead   Boolean  @default(false) @map("can_read")
+  canWrite  Boolean  @default(false) @map("can_write")
+  canUpdate Boolean  @default(false) @map("can_update")
+  canDelete Boolean  @default(false) @map("can_delete")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([role, resource])
+  @@map("access_rules")
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  revendaId String?  @map("revenda_id")
+
+  // Dados do cliente (Pessoa Física ou Jurídica)
+  name          String
+  document      String?  @unique
+  documentType  String?  @map("document_type")
+  email         String?
+  phone         String?
+
+  // Responsável Legal
+  legalRepresentativeName     String? @map("legal_rep_name")
+  legalRepresentativeDocument String? @map("legal_rep_document")
+  legalRepresentativeEmail    String? @map("legal_rep_email")
+  legalRepresentativePhone    String? @map("legal_rep_phone")
+
+  // Endereço do cliente (opcional, caso diferente da empresa)
+  zipCode      String? @map("zip_code")
+  street       String?
+  number       String?
+  complement   String?
+  neighborhood String?
+  city         String?
+  state        String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  revenda   Revenda?  @relation(fields: [revendaId], references: [id])
+  companies Company[]
+
+  @@map("clients")
+}
+
+model Company {
+  id            String    @id @default(uuid())
+  revendaId     String?   @map("revenda_id")
+  clientId      String?   @map("client_id")
+  name          String
+  subdomain     String
+  customDomain  String?   @map("custom_domain")
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  demoEndDate   DateTime? @map("demo_end_date")
+  demoStartDate DateTime? @map("demo_start_date")
+  isDemoMode    Boolean   @default(false) @map("is_demo_mode")
+  billingDay    Int?      @map("billing_day")
+  city          String?
+  complement    String?
+  document      String?   @unique
+  documentType  String?   @map("document_type")
+  email         String?
+  monthlyFee    Decimal?  @map("monthly_fee") @db.Decimal(10, 2)
+  neighborhood  String?
+  number        String?
+  paymentMethod String?   @map("payment_method")
+  phone         String?
+  segment       String?
+  state         String?
+  street        String?
+  tradeName     String?   @map("trade_name")
+  zipCode       String?   @map("zip_code")
+
+  // Configuração Fiscal e Contábil
+  taxRegime       String?   @map("tax_regime")
+  accountantName  String?   @map("accountant_name")
+  accountantEmail String?   @map("accountant_email")
+
+  // Business Details
+  openingDate   DateTime? @map("opening_date") @db.Date
+  openingHours  String?   @map("opening_hours")
+  modules       String[]  @map("active_modules")
+
+  // --- 1. Contrato / Comercial ---
+  contractNumber   String?   @map("contract_number")
+  contractStartDate DateTime? @map("contract_start_date")
+  contractEndDate   DateTime? @map("contract_end_date")
+  contractStatus    String?   @map("contract_status") // ativo, suspenso, cancelado
+  autoRenewal       Boolean?  @default(true) @map("auto_renewal")
+  noticePeriodDays  Int?      @map("notice_period_days")
+  signedAt          DateTime? @map("signed_at")
+  signedBy          String?   @map("signed_by")
+
+  // --- 2. Financeiro e Cobrança ---
+  billingStatus      String?   @map("billing_status") // em_dia, inadimplente, bloqueado
+  lastBillingDate    DateTime? @map("last_billing_date")
+  nextBillingDate    DateTime? @map("next_billing_date")
+  billingSuspendedAt DateTime? @map("billing_suspended_at")
+  lateFeePercent     Decimal?  @map("late_fee_percent") @db.Decimal(5, 2)
+  interestPercent    Decimal?  @map("interest_percent") @db.Decimal(5, 2)
+  
+  // Integração Gateway
+  gatewayCustomerId      String? @map("gateway_customer_id")
+  defaultPaymentMethodId String? @map("default_payment_method_id")
+  paymentProvider        String? @map("payment_provider") // Asaas, Stripe, etc.
+
+  // Notas / Financeiro
+  issueInvoice        Boolean? @default(true) @map("issue_invoice")
+  invoiceEmail        String?  @map("invoice_email")
+  invoiceObservations String?  @map("invoice_observations")
+
+  // --- 3. Fiscal / Tributário (Estendido) ---
+  cnae                String?   @map("cnae")
+  municipalTaxRegime  String?   @map("municipal_tax_regime")
+  simpleNationalOption Boolean? @map("simple_national_option")
+  simpleNationalSince  DateTime? @map("simple_national_since")
+  taxIncentives        Json?     @map("tax_incentives")
+  
+  // Configs Fiscais Específicas
+  nfseSettings Json? @map("nfse_settings")
+  nfeSettings  Json? @map("nfe_settings")
+  cteSettings  Json? @map("cte_settings")
+  nfceSettings Json? @map("nfce_settings")
+
+  // --- 4. Operacional / Uso ---
+  maxUsers              Int?      @map("max_users")
+  maxBranches           Int?      @map("max_branches")
+  maxInvoicesPerMonth   Int?      @map("max_invoices_per_month")
+  storageLimitMb        Int?      @map("storage_limit_mb")
+  currentStorageUsageMb Int?      @default(0) @map("current_storage_usage_mb")
+  blockedReason         String?   @map("blocked_reason")
+  blockedAt             DateTime? @map("blocked_at")
+  lastAccessAt          DateTime? @map("last_access_at")
+  lastLoginIp           String?   @map("last_login_ip")
+
+  // --- 5. Configurações de Sistema ---
+  schemaName          String?   @map("schema_name") // Já planejado para microserviços
+  dbConnectionString  String?   @map("db_connection_string")
+  timezone            String?   @default("America/Sao_Paulo")
+  language            String?   @default("pt-BR")
+  dateFormat          String?   @default("dd/MM/yyyy")
+  numberFormat        String?   @default("pt-BR")
+  currency            String?   @default("BRL")
+  defaultWarehouseId  String?   @map("default_warehouse_id")
+  defaultPriceTableId String?   @map("default_price_table_id")
+
+  // --- 6. Contato e Suporte ---
+  supportEmail           String?   @map("support_email")
+  supportPhone           String?   @map("support_phone")
+  preferredContactMethod String?   @map("preferred_contact_method")
+  notes                  String?   @db.Text
+  internalTags           String[]  @map("internal_tags")
+
+  // --- 7. Segurança e Compliance ---
+  lgpdAcceptedAt      DateTime? @map("lgpd_accepted_at")
+  lgpdVersion         String?   @map("lgpd_version")
+  dataRetentionPolicy String?   @map("data_retention_policy")
+  twoFactorRequired   Boolean?  @default(false) @map("two_factor_required")
+  passwordPolicyId    String?   @map("password_policy_id")
+
+  // Fiscal
+  stateRegistration     String?   @map("state_registration")
+  municipalRegistration String?   @map("municipal_registration")
+  spedSettings          Json?     @map("sped_settings")
+
+  // Filial (Matriz)
+  parentCompanyId String?  @map("parent_company_id")
+  parentCompany   Company? @relation("MatrizFilial", fields: [parentCompanyId], references: [id])
+  branches        Company[] @relation("MatrizFilial")
+
+  // Dono
+  ownerUserId String? @map("owner_user_id")
+  ownerUser   User?   @relation("CompanyOwner", fields: [ownerUserId], references: [id])
+
+  revenda       Revenda?      @relation(fields: [revendaId], references: [id])
+  client        Client?       @relation(fields: [clientId], references: [id])
+  userCompanies UserCompany[] // ✨ Usuários com acesso a esta empresa
+  contracts     Contract[]
+  tickets       Ticket[]
+
+  @@unique([revendaId, subdomain])
+  @@map("companies")
+}
+
+model ErpInstance {
+  id        String   @id @default(uuid())
+  revendaId String   @map("revenda_id")
+  dbName    String   @map("db_name")
+  status    String
+  apiUrl    String?  @map("api_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  revenda   Revenda  @relation(fields: [revendaId], references: [id])
+
+  @@map("erp_instances")
+}
+
+model Log {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  target    String
+  details   Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("logs")
+}
+
+model Revenda {
+  id           String   @id @default(uuid())
+  name         String
+  domain       String   @unique
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  city         String?
+  complement   String?
+  document     String   @unique
+  documentType String   @map("document_type")
+  neighborhood String?
+  number       String?
+  state        String?
+  street       String?
+  zipCode      String?  @map("zip_code")
+
+  companies    Company[]
+  clients      Client[]
+  erpInstances ErpInstance[]
+  users        User[]
+  contracts    Contract[]
+  tickets      Ticket[]
+
+  @@map("revendas")
+}
+
+model Contract {
+  id        String   @id @default(uuid())
+  revendaId String?   @map("revenda_id")
+  companyId String?   @map("company_id")
+  title     String
+  status    String   @default("active") // active, expired, cancelled
+  startDate DateTime @map("start_date")
+  endDate   DateTime? @map("end_date")
+  amount    Decimal? @db.Decimal(10, 2)
+  fileUrl   String?  @map("file_url")
+  terms     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  revenda   Revenda? @relation(fields: [revendaId], references: [id])
+  company   Company?  @relation(fields: [companyId], references: [id])
+
+  @@map("contracts")
+}
+
+model User {
+  id                 String   @id @default(uuid())
+  name               String
+  email              String   @unique
+  passwordHash       String   @map("password_hash")
+  role               String
+  revendaId          String?  @map("revenda_id")
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  mustChangePassword Boolean  @default(true) @map("must_change_password")
+  cpf                String?  @unique
+  username           String   @unique
+  currentCompanyId   String?  @map("current_company_id") // ✨ Empresa atualmente selecionada
+  userType           UserType @default(CLIENTE_FUNCIONARIO) @map("user_type")
+  hashedRefreshToken String?  @map("hashed_refresh_token")
+
+  logs            Log[]
+  revenda         Revenda?           @relation(fields: [revendaId], references: [id])
+  ownedCompanies  Company[]          @relation("CompanyOwner")
+  companies       UserCompany[]      // ✨ Empresas que o usuário tem acesso
+  assignedTickets TicketAssignment[]
+  createdTickets  Ticket[]           @relation("TicketCreator")
+
+  @@map("users")
+}
+
+// ✨ Tabela associativa: User ↔ Company (muitos para muitos)
+model UserCompany {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  companyId  String   @map("company_id")
+  role       String   // "owner", "admin", "manager", "employee"
+  isDefault  Boolean  @default(false) @map("is_default")
+  createdAt  DateTime @default(now()) @map("created_at")
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, companyId])
+  @@map("user_companies")
+}
+
+model Ticket {
+  id          String   @id @default(uuid())
+  revendaId   String   @map("revenda_id")
+  companyId   String   @map("company_id")
+  title       String
+  description String   @db.Text
+  status      TicketStatus @default(AGUARDANDO_ATENDIMENTO)
+  priority    TicketPriority @default(MEDIA)
+  category    String?
+  createdById String   @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  closedAt    DateTime? @map("closed_at")
+  scheduledFor DateTime? @map("scheduled_for")
+  
+  revenda     Revenda  @relation(fields: [revendaId], references: [id])
+  company     Company  @relation(fields: [companyId], references: [id])
+  createdBy   User     @relation("TicketCreator", fields: [createdById], references: [id])
+  assignments TicketAssignment[]
+
+  @@map("tickets")
+}
+
+model TicketAssignment {
+  id        String   @id @default(uuid())
+  ticketId  String   @map("ticket_id")
+  userId    String   @map("user_id")
+  isPrimary Boolean  @default(false) @map("is_primary")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+  
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([ticketId, userId])
+  @@map("ticket_assignments")
+}
+
+enum TicketStatus {
+  AGUARDANDO_ATENDIMENTO
+  AGENDADO
+  EM_EXECUCAO
+  IMPLANTACAO
+  CONCLUIDO
+  CANCELADO
+}
+
+enum TicketPriority {
+  BAIXA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+model BlogPost {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  title     String
+  content   String   @db.Text
+  coverImage String? @map("cover_image")
+  published Boolean  @default(false)
+  author    String?
+  tags      String[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("blog_posts")
+}
+
+model ContactRequest {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String   @db.Text
+  status    String   @default("new") // new, contacted, spam, converted
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("contact_requests")
+}
+
+enum UserType {
+  CODESDEVS_SUPERADMIN
+  CODESDEVS_SUPORTE
+  REVENDA_ADMIN
+  REVENDA_SUPORTE
+  REVENDA_GERENTE
+  REVENDA_CONTADOR
+  CLIENTE_ADMIN
+  CLIENTE_GERENTE
+  CLIENTE_FUNCIONARIO
+  CLIENTE_CONTADOR
+}
