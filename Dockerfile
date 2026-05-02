@@ -32,8 +32,8 @@ COPY --from=builder /app/prisma ./prisma
 # Set environment to production
 ENV NODE_ENV=production
 
-# Expose port (default NestJS port is usually 3000, adjust if needed)
-EXPOSE 3000
+# Expose port (api-flow: 4242)
+EXPOSE 4242
 
 # Run the app
 CMD ["bun", "run", "dist/main.js"]
