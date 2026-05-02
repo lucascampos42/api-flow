@@ -1,98 +1,72 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🚀 API Flow
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+<div align="center">
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+![NestJS](https://img.shields.io/badge/NestJS-10.0-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 
-## Description
+**Núcleo de Autenticação e Gestão de Revendas do Ecossistema CDS**
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+</div>
 
-## Project setup
+---
 
-```bash
-$ bun install
-```
+## 📋 Sobre o Projeto
 
-## Compile and run the project
+A **API Flow** é o ponto de entrada central do ecossistema. Ela é responsável por gerenciar a identidade dos usuários, controlar o acesso aos sistemas e orquestrar o onboarding de novas revendas. Além disso, fornece o suporte necessário para as funcionalidades do site institucional e o controle interno de demandas.
 
-```bash
-# development
-$ bun run start
+### ✨ Funcionalidades Principais
 
-# watch mode
-$ bun run start:dev
+- 🔐 **Autenticação Centralizada**: Gerenciamento de login e JWT para todo o ecossistema.
+- 🤝 **Gestão de Revendas**: Cadastro, ativação e controle de permissões de parceiros.
+- 🌐 **Backend Institucional**: Suporte para formulários e dados dinâmicos do site oficial.
+- 📈 **Controle de Demandas**: Sistema interno para acompanhamento de solicitações e tickets.
+- 🛠️ **Onboarding**: Fluxo automatizado para novos clientes e parceiros.
 
-# production mode
-$ bun run start:prod
-```
+## 🚀 Como Rodar
 
-## Run tests
+Este projeto utiliza o **Bun** para máxima performance.
 
-```bash
-# unit tests
-$ bun run test
+### Pré-requisitos
 
-# e2e tests
-$ bun run test:e2e
+- [Bun](https://bun.sh/) instalado.
+- Banco de Dados (PostgreSQL/MySQL) configurado.
 
-# test coverage
-$ bun run test:cov
-```
+### Passos
 
-## Deployment
+1. **Instale as dependências**
+   ```bash
+   bun install
+   ```
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+2. **Configure as Variáveis de Ambiente**
+   Crie um arquivo `.env` na raiz do projeto (veja `.env.example` se disponível) e configure as credenciais do banco e JWT.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+3. **Execute as Migrations**
+   ```bash
+   bun x prisma generate
+   bun x prisma migrate dev
+   ```
 
-```bash
-$ bun install -g @nestjs/mau
-$ mau deploy
-```
+4. **Inicie o Servidor**
+   ```bash
+   # Modo Desenvolvimento
+   bun run start:dev
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+   # Modo Produção
+   bun run start:prod
+   ```
 
-## Resources
+## 🛠️ Tecnologias
 
-Check out a few resources that may come in handy when working with NestJS:
+- **Framework**: NestJS
+- **ORM**: Prisma
+- **Runtime**: Bun
+- **Linguagem**: TypeScript
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+<div align="center">
+Desenvolvido por CodesDevs
+</div>
