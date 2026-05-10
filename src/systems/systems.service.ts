@@ -1,68 +1,72 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { SYSTEMS, System } from '../common/constants/systems.constants';
 
 @Injectable()
 export class SystemsService {
   constructor(private prisma: PrismaService) {}
 
-  // --- Master (Systems CRUD) ---
+  // --- Master (Hardcoded Systems) ---
 
-  async findAll() {
-    return this.prisma.system.findMany({
-      orderBy: { name: 'asc' },
-    });
+  async findAll(): Promise<System[]> {
+    return SYSTEMS;
   }
 
-  async findOne(id: string) {
-    const system = await this.prisma.system.findUnique({ where: { id } });
+  async findOne(slug: string): Promise<System> {
+    const system = SYSTEMS.find((s) => s.slug === slug);
     if (!system) throw new NotFoundException('Sistema não encontrado');
     return system;
   }
 
-  async create(data: any) {
-    return this.prisma.system.create({ data });
-  }
-
-  async update(id: string, data: any) {
-    return this.prisma.system.update({ where: { id }, data });
-  }
+  // creation and update removed as they are hardcoded
 
   // --- Revenda Systems Provisioning ---
 
   async findByRevenda(revendaId: string) {
-    return this.prisma.system.findMany({
-      where: {
-        revendaSystems: {
-          some: { revendaId },
-        },
-      },
+    const revendaSystems = await this.prisma.revendaSystem.findMany({
+      where: { revendaId },
     });
+
+    // Merge with hardcoded data
+    return SYSTEMS.filter((s) =>
+      revendaSystems.some((rs) => rs.systemSlug === s.slug),
+    );
   }
 
-  async assignToRevenda(revendaId: string, systemId: string) {
+  async assignToRevenda(revendaId: string, systemSlug: string) {
+    // Validate if slug exists
+    await this.findOne(systemSlug);
+
     return this.prisma.revendaSystem.upsert({
-      where: { revendaId_systemId: { revendaId, systemId } },
-      create: { revendaId, systemId },
+      where: { revendaId_systemSlug: { revendaId, systemSlug } },
+      create: { revendaId, systemSlug },
       update: {},
     });
   }
 
-  async unassignFromRevenda(revendaId: string, systemId: string) {
+  async unassignFromRevenda(revendaId: string, systemSlug: string) {
     return this.prisma.revendaSystem.delete({
-      where: { revendaId_systemId: { revendaId, systemId } },
+      where: { revendaId_systemSlug: { revendaId, systemSlug } },
     });
   }
 
   // --- Company Systems Provisioning ---
 
   async findByCompany(companyId: string) {
-    return this.prisma.companySystem.findMany({
+    const companySystems = await this.prisma.companySystem.findMany({
       where: { companyId },
-      include: { system: true },
+    });
+
+    return companySystems.map((cs) => {
+      const system = SYSTEMS.find((s) => s.slug === cs.systemSlug);
+      return {
+        ...cs,
+        system: system || { name: cs.systemSlug, slug: cs.systemSlug },
+      };
     });
   }
 
-  async toggleForCompany(companyId: string, systemId: string, active: boolean) {
+  async toggleForCompany(companyId: string, systemSlug: string, active: boolean) {
     // Verificar se a revenda desta empresa possui o sistema
     const company = await this.prisma.company.findUnique({
       where: { id: companyId },
@@ -72,7 +76,7 @@ export class SystemsService {
     if (!company?.revendaId) throw new NotFoundException('Empresa ou Revenda não encontrada');
 
     const hasAccess = await this.prisma.revendaSystem.findUnique({
-      where: { revendaId_systemId: { revendaId: company.revendaId, systemId } },
+      where: { revendaId_systemSlug: { revendaId: company.revendaId, systemSlug } },
     });
 
     if (!hasAccess) {
@@ -80,8 +84,8 @@ export class SystemsService {
     }
 
     return this.prisma.companySystem.upsert({
-      where: { companyId_systemId: { companyId, systemId } },
-      create: { companyId, systemId, active },
+      where: { companyId_systemSlug: { companyId, systemSlug } },
+      create: { companyId, systemSlug, active },
       update: { active },
     });
   }

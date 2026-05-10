@@ -24,39 +24,32 @@ export class SystemsController {
   // --- Master Endpoints (SuperAdmin Only) ---
 
   @Get()
-  @ApiOperation({ summary: 'Listar todos os sistemas (Master)' })
+  @ApiOperation({ summary: 'Listar todos os sistemas (Master - Hardcoded)' })
   async findAll(@Req() req) {
     this.checkSuperAdmin(req.user);
     return this.systemsService.findAll();
   }
 
-  @Post()
-  @ApiOperation({ summary: 'Criar novo sistema (Master)' })
-  async create(@Req() req, @Body() data: any) {
-    this.checkSuperAdmin(req.user);
-    return this.systemsService.create(data);
-  }
-
-  @Post('revenda/:revendaId/:systemId')
+  @Post('revenda/:revendaId/:systemSlug')
   @ApiOperation({ summary: 'Liberar sistema para uma revenda (Master)' })
   async assignToRevenda(
     @Req() req,
     @Param('revendaId') revendaId: string,
-    @Param('systemId') systemId: string,
+    @Param('systemSlug') systemSlug: string,
   ) {
     this.checkSuperAdmin(req.user);
-    return this.systemsService.assignToRevenda(revendaId, systemId);
+    return this.systemsService.assignToRevenda(revendaId, systemSlug);
   }
 
-  @Delete('revenda/:revendaId/:systemId')
+  @Delete('revenda/:revendaId/:systemSlug')
   @ApiOperation({ summary: 'Remover sistema de uma revenda (Master)' })
   async unassignFromRevenda(
     @Req() req,
     @Param('revendaId') revendaId: string,
-    @Param('systemId') systemId: string,
+    @Param('systemSlug') systemSlug: string,
   ) {
     this.checkSuperAdmin(req.user);
-    return this.systemsService.unassignFromRevenda(revendaId, systemId);
+    return this.systemsService.unassignFromRevenda(revendaId, systemSlug);
   }
 
   // --- Reseller Endpoints ---
@@ -71,16 +64,16 @@ export class SystemsController {
     return this.systemsService.findByRevenda(revendaId);
   }
 
-  @Post('company/:companyId/:systemId')
+  @Post('company/:companyId/:systemSlug')
   @ApiOperation({ summary: 'Ativar/Desativar sistema para uma empresa (Revenda)' })
   async toggleForCompany(
     @Req() req,
     @Param('companyId') companyId: string,
-    @Param('systemId') systemId: string,
+    @Param('systemSlug') systemSlug: string,
     @Body('active') active: boolean,
   ) {
     // Lógica simplificada: apenas SuperAdmin ou se for da Revenda (validação no service)
-    return this.systemsService.toggleForCompany(companyId, systemId, active);
+    return this.systemsService.toggleForCompany(companyId, systemSlug, active);
   }
 
   @Get('company/:companyId')
