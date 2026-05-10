@@ -32,6 +32,10 @@ export class PoliciesGuard implements CanActivate {
         context.getHandler(),
       ) || [];
 
+    if (policyHandlers.length === 0) {
+      return true;
+    }
+
     const { user } = context.switchToHttp().getRequest();
     if (!user) return false;
 
