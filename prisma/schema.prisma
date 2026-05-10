@@ -477,43 +477,27 @@ enum SuggestionStatus {
   DISPONIBILIZADO
 }
 
-model System {
+model RevendaSystem {
   id          String   @id @default(uuid())
-  slug        String   @unique // cds-gestor, bot-whatsapp, calculadora-xml
-  name        String
-  description String?
-  active      Boolean  @default(true)
+  revendaId   String   @map("revenda_id")
+  systemSlug  String   @map("system_slug")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  revendaSystems RevendaSystem[]
-  companySystems CompanySystem[]
-
-  @@map("systems")
-}
-
-model RevendaSystem {
-  id        String   @id @default(uuid())
-  revendaId String   @map("revenda_id")
-  systemId  String   @map("system_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
   revenda Revenda @relation(fields: [revendaId], references: [id])
-  system  System  @relation(fields: [systemId], references: [id])
 
-  @@unique([revendaId, systemId])
+  @@unique([revendaId, systemSlug])
   @@map("revenda_systems")
 }
 
 model CompanySystem {
-  id        String   @id @default(uuid())
-  companyId String   @map("company_id")
-  systemId  String   @map("system_id")
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now()) @map("created_at")
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  systemSlug  String   @map("system_slug")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
 
   company Company @relation(fields: [companyId], references: [id])
-  system  System  @relation(fields: [systemId], references: [id])
 
-  @@unique([companyId, systemId])
+  @@unique([companyId, systemSlug])
   @@map("company_systems")
 }
