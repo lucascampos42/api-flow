@@ -193,6 +193,7 @@ model Client {
   userCompanies UserCompany[] // ✨ Usuários com acesso a esta empresa
   contracts     Contract[]
   tickets       Ticket[]
+  systems       CompanySystem[] // ✨ Sistemas ativos para esta empresa
 
   @@unique([revendaId, subdomain])
   @@index([revendaId])
@@ -252,6 +253,7 @@ model Client {
   users        User[]
   contracts    Contract[]
   tickets      Ticket[]
+  systems      RevendaSystem[] // ✨ Sistemas que a revenda pode comercializar
 
   @@map("revendas")
   }
@@ -455,4 +457,45 @@ enum SuggestionStatus {
   EM_TESTES
   CONCLUIDO
   DISPONIBILIZADO
+}
+
+model System {
+  id          String   @id @default(uuid())
+  slug        String   @unique // cds-gestor, bot-whatsapp, calculadora-xml
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  revendaSystems RevendaSystem[]
+  companySystems CompanySystem[]
+
+  @@map("systems")
+}
+
+model RevendaSystem {
+  id        String   @id @default(uuid())
+  revendaId String   @map("revenda_id")
+  systemId  String   @map("system_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  revenda Revenda @relation(fields: [revendaId], references: [id])
+  system  System  @relation(fields: [systemId], references: [id])
+
+  @@unique([revendaId, systemId])
+  @@map("revenda_systems")
+}
+
+model CompanySystem {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  systemId  String   @map("system_id")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+  system  System  @relation(fields: [systemId], references: [id])
+
+  @@unique([companyId, systemId])
+  @@map("company_systems")
 }
