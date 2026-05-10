@@ -22,9 +22,13 @@ export class SuggestionsController {
 
   @Public() // Permite que visitantes vejam as sugestões
   @Get()
-  @ApiOperation({ summary: 'Listar todas as sugestões' })
-  findAll(@Query('system') system?: string) {
-    return this.suggestionsService.findAll(system);
+  @ApiOperation({ summary: 'Listar todas as sugestões com paginação' })
+  findAll(
+    @Query('system') system?: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.suggestionsService.findAll(system, +page, +limit);
   }
 
   @UseGuards(JwtAuthGuard)

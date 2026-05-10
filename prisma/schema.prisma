@@ -306,6 +306,7 @@ model Client {
   assignedTickets TicketAssignment[]
   createdTickets  Ticket[]           @relation("TicketCreator")
   suggestions     Suggestion[]       @relation("SuggestionCreator")
+  ticketActions   TicketAction[]
 
   @@index([revendaId])
   @@map("users")
@@ -338,6 +339,7 @@ model Client {
   status      TicketStatus @default(AGUARDANDO_ATENDIMENTO)
   priority    TicketPriority @default(MEDIA)
   category    String?
+  isVisit     Boolean  @default(false) @map("is_visit")
   createdById String   @map("created_by_id")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -348,11 +350,27 @@ model Client {
   company     Company  @relation(fields: [companyId], references: [id])
   createdBy   User     @relation("TicketCreator", fields: [createdById], references: [id])
   assignments TicketAssignment[]
+  actions     TicketAction[]
 
   @@index([revendaId])
   @@index([companyId])
   @@index([createdById])
   @@map("tickets")
+  }
+
+  model TicketAction {
+  id        String   @id @default(uuid())
+  ticketId  String   @map("ticket_id")
+  userId    String   @map("user_id")
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([ticketId])
+  @@index([userId])
+  @@map("ticket_actions")
   }
 
   model TicketAssignment {

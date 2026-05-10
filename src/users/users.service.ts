@@ -54,6 +54,26 @@ export class UsersService {
         role: true,
         active: true,
         revendaId: true,
+        userType: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async findAllByRevenda(revendaId: string) {
+    return this.prisma.user.findMany({
+      where: { revendaId },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        cpf: true,
+        role: true,
+        active: true,
+        revendaId: true,
+        userType: true,
+        createdAt: true,
       },
     });
   }

@@ -7,19 +7,37 @@ import { SuggestionStatus } from '@prisma/client';
 export class SuggestionsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(system?: string) {
-    return this.prisma.suggestion.findMany({
-      where: system ? { system } : {},
-      orderBy: { votes: 'desc' },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
+  async findAll(system?: string, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+    const where = system ? { system } : {};
+
+    const [items, total] = await Promise.all([
+      this.prisma.suggestion.findMany({
+        where,
+        orderBy: { votes: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
+      }),
+      this.prisma.suggestion.count({ where }),
+    ]);
+
+    return {
+      items,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   }
 
   async create(createSuggestionDto: CreateSuggestionDto, userId?: string) {
