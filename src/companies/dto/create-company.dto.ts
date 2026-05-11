@@ -32,7 +32,7 @@ export class CreateCompanyDto {
   @ApiProperty({ example: 'Empresa ABC', description: 'Nome da empresa' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @ApiProperty({
     example: 'empresa-abc',

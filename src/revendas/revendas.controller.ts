@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Patch, Delete } from '@nestjs/common';
 import { RevendasService } from './revendas.service';
 import { CreateRevendaDto } from './dto/create-revenda.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -32,5 +32,19 @@ export class RevendasController {
   @ApiOperation({ summary: 'Obter detalhes de uma revenda' })
   findOne(@Param('id') id: string) {
     return this.revendasService.findOne(id);
+  }
+
+  @Patch(':id')
+  @CheckPolicies((ability) => ability.can(Action.Update, 'Revenda'))
+  @ApiOperation({ summary: 'Atualizar dados de uma revenda' })
+  update(@Param('id') id: string, @Body() updateData: any) {
+    return this.revendasService.update(id, updateData);
+  }
+
+  @Delete(':id')
+  @CheckPolicies((ability) => ability.can(Action.Delete, 'Revenda'))
+  @ApiOperation({ summary: 'Remover uma revenda' })
+  remove(@Param('id') id: string) {
+    return this.revendasService.remove(id);
   }
 }

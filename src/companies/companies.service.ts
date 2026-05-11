@@ -132,8 +132,11 @@ export class CompaniesService {
       }
 
       return company;
-    } catch (error) {
-      if (error instanceof ConflictException || error instanceof InternalServerErrorException) {
+    } catch (error: any) {
+      if (
+        error instanceof ConflictException ||
+        error instanceof InternalServerErrorException
+      ) {
         throw error;
       }
       if (error.code === 'P2002') {
@@ -153,11 +156,15 @@ export class CompaniesService {
     const internalApiKey = this.configService.get<string>('INTERNAL_API_KEY');
 
     if (!cdsGestorUrl) {
-      this.logger.warn('CDSGESTOR_API_URL não configurada no ambiente. Pulando provisionamento.');
+      this.logger.warn(
+        'CDSGESTOR_API_URL não configurada no ambiente. Pulando provisionamento.',
+      );
       return;
     }
 
-    this.logger.log(`Solicitando provisionamento para ${schemaName} em ${cdsGestorUrl}`);
+    this.logger.log(
+      `Solicitando provisionamento para ${schemaName} em ${cdsGestorUrl}`,
+    );
 
     try {
       const response = await fetch(`${cdsGestorUrl}/internal/provisioning`, {
@@ -172,9 +179,13 @@ export class CompaniesService {
       if (!response.ok) {
         throw new Error(`Erro HTTP ${response.status}`);
       }
-      this.logger.log(`Provisionamento de ${schemaName} concluído com sucesso via API.`);
-    } catch (err) {
-      this.logger.error(`Erro ao chamar API de provisionamento: ${err.message}`);
+      this.logger.log(
+        `Provisionamento de ${schemaName} concluído com sucesso via API.`,
+      );
+    } catch (err: any) {
+      this.logger.error(
+        `Erro ao chamar API de provisionamento: ${err.message}`,
+      );
       throw err;
     }
   }

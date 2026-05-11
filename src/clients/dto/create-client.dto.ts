@@ -10,7 +10,7 @@ export class CreateClientDto {
   @ApiProperty({ description: 'Nome do cliente' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @ApiProperty({ description: 'CPF/CNPJ', required: false })
   @IsString()

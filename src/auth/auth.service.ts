@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SessionsService } from './sessions/sessions.service';
 import { generateSecret, generateURI, verify } from 'otplib';
 import * as qrcode from 'qrcode';
+import { SYSTEMS } from '../common/constants/systems.constants';
 
 @Injectable()
 export class AuthService {
@@ -403,26 +404,20 @@ export class AuthService {
       // Buscar sistemas ativos para a empresa
       const companySystems = await this.prisma.companySystem.findMany({
         where: { companyId, active: true },
-        include: { system: true },
       });
 
       schemaName = company?.subdomain || null;
       companyRole = userCompany?.role || null;
-      activeSystems = companySystems.map((cs) => cs.system.slug);
+      activeSystems = companySystems.map((cs) => cs.systemSlug);
     } else if (user.userType?.startsWith('REVENDA_') && user.revendaId) {
       // Para usuários de revenda sem contexto de empresa, ver o que a revenda possui
       const revendaSystems = await this.prisma.revendaSystem.findMany({
         where: { revendaId: user.revendaId },
-        include: { system: true },
       });
-      activeSystems = revendaSystems.map((rs) => rs.system.slug);
+      activeSystems = revendaSystems.map((rs) => rs.systemSlug);
     } else if (user.userType === 'CODESDEVS_SUPERADMIN') {
       // SuperAdmin vê tudo
-      const allSystems = await this.prisma.system.findMany({
-        where: { active: true },
-        select: { slug: true },
-      });
-      activeSystems = allSystems.map((s) => s.slug);
+      activeSystems = SYSTEMS.map((s) => s.slug);
     }
 
     const payload = {
