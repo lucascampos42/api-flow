@@ -6,6 +6,7 @@ import {
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { BCRYPT_SALT_ROUNDS } from './constants';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ConfigService } from '@nestjs/config';
@@ -286,7 +287,7 @@ export class AuthService {
   }
 
   async updateRefreshToken(userId: string, refreshToken: string) {
-    const hash = await bcrypt.hash(refreshToken, 10);
+    const hash = await bcrypt.hash(refreshToken, BCRYPT_SALT_ROUNDS);
     await this.usersService.update(userId, {
       hashedRefreshToken: hash,
     });
@@ -367,7 +368,7 @@ export class AuthService {
 
     const newPasswordHash = await bcrypt.hash(
       changePasswordDto.newPassword,
-      10,
+      BCRYPT_SALT_ROUNDS,
     );
 
     await this.usersService.update(userId, {
