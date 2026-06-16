@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -10,11 +11,12 @@ export class UsersService {
   private generatePassword(length = 12): string {
     const charset =
       'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
-    const retVal = new Array(length);
-    for (let i = 0, n = charset.length; i < length; ++i) {
-      retVal[i] = charset.charAt(Math.floor(Math.random() * n));
+    const n = charset.length;
+    const result = new Array(length);
+    for (let i = 0; i < length; i++) {
+      result[i] = charset.charAt(crypto.randomInt(n));
     }
-    return retVal.join('');
+    return result.join('');
   }
 
   async create(createUserDto: CreateUserDto) {
@@ -54,6 +56,26 @@ export class UsersService {
         role: true,
         active: true,
         revendaId: true,
+        userType: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async findAllByRevenda(revendaId: string) {
+    return this.prisma.user.findMany({
+      where: { revendaId },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        cpf: true,
+        role: true,
+        active: true,
+        revendaId: true,
+        userType: true,
+        createdAt: true,
       },
     });
   }

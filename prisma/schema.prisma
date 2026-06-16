@@ -192,7 +192,7 @@ model Client {
   client        Client?       @relation(fields: [clientId], references: [id])
   userCompanies UserCompany[] // ✨ Usuários com acesso a esta empresa
   contracts     Contract[]
-  tickets       Ticket[]
+  systems       CompanySystem[] // ✨ Sistemas ativos para esta empresa
 
   @@unique([revendaId, subdomain])
   @@index([revendaId])
@@ -251,7 +251,7 @@ model Client {
   erpInstances ErpInstance[]
   users        User[]
   contracts    Contract[]
-  tickets      Ticket[]
+  systems      RevendaSystem[] // ✨ Sistemas que a revenda pode comercializar
 
   @@map("revendas")
   }
@@ -294,13 +294,14 @@ model Client {
   currentCompanyId   String?  @map("current_company_id") // ✨ Empresa atualmente selecionada
   userType           UserType @default(CLIENTE_FUNCIONARIO) @map("user_type")
   hashedRefreshToken String?  @map("hashed_refresh_token")
+  twoFactorSecret    String?  @map("two_factor_secret")
+  isTwoFactorEnabled Boolean  @default(false) @map("is_two_factor_enabled")
 
   logs            Log[]
   revenda         Revenda?           @relation(fields: [revendaId], references: [id])
   ownedCompanies  Company[]          @relation("CompanyOwner")
   companies       UserCompany[]      // ✨ Empresas que o usuário tem acesso
-  assignedTickets TicketAssignment[]
-  createdTickets  Ticket[]           @relation("TicketCreator")
+  suggestions     Suggestion[]       // ✨ Sugestões do usuário
 
   @@index([revendaId])
   @@map("users")
@@ -323,65 +324,6 @@ model Client {
   @@index([companyId])
   @@map("user_companies")
   }
-
-  model Ticket {
-  id          String   @id @default(uuid())
-  revendaId   String   @map("revenda_id")
-  companyId   String   @map("company_id")
-  title       String
-  description String   @db.Text
-  status      TicketStatus @default(AGUARDANDO_ATENDIMENTO)
-  priority    TicketPriority @default(MEDIA)
-  category    String?
-  createdById String   @map("created_by_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  closedAt    DateTime? @map("closed_at")
-  scheduledFor DateTime? @map("scheduled_for")
-
-  revenda     Revenda  @relation(fields: [revendaId], references: [id])
-  company     Company  @relation(fields: [companyId], references: [id])
-  createdBy   User     @relation("TicketCreator", fields: [createdById], references: [id])
-  assignments TicketAssignment[]
-
-  @@index([revendaId])
-  @@index([companyId])
-  @@index([createdById])
-  @@map("tickets")
-  }
-
-  model TicketAssignment {
-  id        String   @id @default(uuid())
-  ticketId  String   @map("ticket_id")
-  userId    String   @map("user_id")
-  isPrimary Boolean  @default(false) @map("is_primary")
-  assignedAt DateTime @default(now()) @map("assigned_at")
-
-  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id])
-
-  @@unique([ticketId, userId])
-  @@index([ticketId])
-  @@index([userId])
-  @@map("ticket_assignments")
-  }
-
-
-enum TicketStatus {
-  AGUARDANDO_ATENDIMENTO
-  AGENDADO
-  EM_EXECUCAO
-  IMPLANTACAO
-  CONCLUIDO
-  CANCELADO
-}
-
-enum TicketPriority {
-  BAIXA
-  MEDIA
-  ALTA
-  URGENTE
-}
 
 model BlogPost {
   id        String   @id @default(uuid())
@@ -423,4 +365,58 @@ enum UserType {
   CLIENTE_GERENTE
   CLIENTE_FUNCIONARIO
   CLIENTE_CONTADOR
+}
+
+model Suggestion {
+  id          String   @id @default(uuid())
+  title       String
+  description String   @db.Text
+  system      String   // Ex: "CDS Gestor", "Calculadora de XML"
+  status      SuggestionStatus @default(ABERTO)
+  votes       Int      @default(0)
+  createdById String?  @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  createdBy   User?    @relation(fields: [createdById], references: [id])
+
+  @@map("suggestions")
+}
+
+enum SuggestionStatus {
+  ABERTO
+  EM_ANALISE
+  EM_DUPLICIDADE
+  EM_DESENVOLVIMENTO
+  CANCELADO
+  NAO_APROVADO
+  APROVADO
+  EM_TESTES
+  CONCLUIDO
+  DISPONIBILIZADO
+}
+
+model RevendaSystem {
+  id          String   @id @default(uuid())
+  revendaId   String   @map("revenda_id")
+  systemSlug  String   @map("system_slug")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  revenda Revenda @relation(fields: [revendaId], references: [id])
+
+  @@unique([revendaId, systemSlug])
+  @@map("revenda_systems")
+}
+
+model CompanySystem {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  systemSlug  String   @map("system_slug")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, systemSlug])
+  @@map("company_systems")
 }

@@ -8,6 +8,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 
+import { Public } from '../auth/decorators/public.decorator';
+
 @Controller('health')
 export class HealthController {
   constructor(
@@ -19,6 +21,7 @@ export class HealthController {
   ) {}
 
   @Get()
+  @Public()
   @HealthCheck()
   check() {
     const revendaUrl = this.configService.get<string>('REVENDA_API_URL');

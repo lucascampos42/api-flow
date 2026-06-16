@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { CaslAbilityFactory, AppAbility } from './casl-ability.factory';
 import { CHECK_POLICIES_KEY, PolicyHandler } from './check-policies.decorator';
+import { IS_PUBLIC_KEY } from '../auth/decorators/public.decorator';
 
 @Injectable()
 export class PoliciesGuard implements CanActivate {
@@ -16,11 +17,24 @@ export class PoliciesGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
+
     const policyHandlers =
       this.reflector.get<PolicyHandler[]>(
         CHECK_POLICIES_KEY,
         context.getHandler(),
       ) || [];
+
+    if (policyHandlers.length === 0) {
+      return true;
+    }
 
     const { user } = context.switchToHttp().getRequest();
     if (!user) return false;

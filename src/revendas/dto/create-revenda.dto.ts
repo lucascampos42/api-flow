@@ -61,6 +61,10 @@ export class CreateRevendaDto {
   @IsBoolean()
   @IsOptional()
   provisionNow?: boolean = true;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  systemIds?: string[];
 }
 
 
