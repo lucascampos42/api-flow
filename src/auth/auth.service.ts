@@ -339,9 +339,7 @@ export class AuthService {
     } as any);
 
     const refreshToken = await this.jwtService.signAsync(payload, {
-      secret:
-        this.configService.get<string>('REFRESH_TOKEN_SECRET') ||
-        'refresh-secret-key-change-me',
+      secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
       expiresIn: jwtRefreshExpiration,
     } as any);
 
